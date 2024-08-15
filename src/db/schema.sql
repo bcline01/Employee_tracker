@@ -1,8 +1,11 @@
-DROP DATABASE IF EXISTS movies_db;
-CREATE DATABASE movies_db;
+DROP DATABASE IF EXISTS employee_tracker_db;
+CREATE DATABASE employee_tracker_db;
 
-\c movies_db;
+\c employee_tracker_db;
 
+DO $$
+
+BEGIN
 /*//TODO: Create a department table */
 CREATE TABLE department (
     id SERIAL PRIMARY KEY,
@@ -27,7 +30,15 @@ first_name VARCHAR(30) NOT NULL,
 last_name VARCHAR(30) NOT NULL,
 role_id INTEGER NOT NULL,
 manager_id INTEGER,
-FOREIGN KEY (role_id)
-REFERENCES roles(id)
+FOREIGN KEY (role_id) REFERENCES roles(id)
+FOREIGN KEY (manager_id) REFERENCES employee (id)
 ON DELETE SET NULL
 );
+
+RAISE NOTICE 'Transaction complete';
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'An error occurred: %', SQLERRM; 
+        ROLLBACK;
+END $$;
