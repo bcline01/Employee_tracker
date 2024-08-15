@@ -56,7 +56,7 @@ function questions() {
     // working with department first
     // see all departments in the table 
 function viewAllDepartments() {
-    pool.query(`SELCECT * FROM department`, (err: Error, result: QueryResult) => {
+    pool.query(`SELECT * FROM department`, (err: Error, result: QueryResult) => {
         if (err) {
             console.log(err);
         } else if (result) {
@@ -81,12 +81,100 @@ inquirer.prompt ({
             console.log(err);
         } else if (result) {
             console.table(result.rows);
-            addDepartment();
+            questions();
         }
     })
 })
 };
 
+// working on roles
+// SELECT * ROLES from roles table
+function viewAllRoles() {
+    pool.query(`SELECT * FROM roles`, (err: Error, result: QueryResult) => {
+        if (err) {
+            console.log(err);
+        } else if (result) {
+            console.table(result.rows);
+            questions();
+        }
+    })
+};
+
+// add a role using addRole() function
+// department id is a foreign key 
+// need to break down id and name off of department to we can connect the ids from roles and department
+function addRole() {
+    pool.query(`SELECT * FROM department`, (err: Error, result: QueryResult) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        const deptArray = result.rows.map(department => ({
+            department_name: department.department_name,
+            value: department.id
+        }));
+// create prompts for name, salary, and department(id)
+    inquirer.prompt ([{
+        type: 'input',
+        name: 'newRoleName',
+        message: "please add a role",
+    },
+    {
+        type: 'input',
+        name: 'newRoleSalary',
+        message: "please add a salary(number)",
+    },
+    {
+        type: 'list',
+        name: 'newDepartment',
+        message: "which department does the new role belong to?",
+        choices: deptArray
+    }
+])
+    .then((answers) => {
+        pool.query(`INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)`,[answers.newRoleName, answers.newRoleSalary, answers.newDepartment],(err: Error, result: QueryResult) => {
+            if (err) {
+                console.log(err);
+            } else if (result) {
+                console.table(result.rows);
+                questions();
+            }
+        })
+    })
+    })};
+
+
+    // working on employees
+    // view all employees using SELECT * FROM employee table
+    function viewAllEmployees() {
+        pool.query(`SELECT * FROM employee`, (err: Error, result: QueryResult) => {
+            if (err) {
+                console.log(err);
+            } else if (result) {
+                console.table(result.rows);
+                questions();
+            }
+        })
+    };
+
+    // add an employee using addEmployee() function
+    function addEmployee() {
+    inquirer.prompt ({
+        type: 'input',
+        name: 'newEmployee',
+        message: "please add an Employee",
+    })
+    .then(function(answers) {
+        pool.query(`INSERT INTO employee VALUES ('${answers.newEmployee}');`, (err: Error, result: QueryResult) => {
+            if (err) {
+                console.log(err);
+            } else if (result) {
+                console.table(result.rows);
+                addEmployee();
+            }
+        })
+    })
+    };
 
 
   
