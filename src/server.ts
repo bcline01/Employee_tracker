@@ -223,8 +223,9 @@ async function addEmployee() {
     } catch (err) {
         console.error('Error:', err);
     }
-}
 
+}
+questions();
 
 
 
