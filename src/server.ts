@@ -105,7 +105,8 @@ function viewAllRoles() {
 
 // add a role using addRole() function
 // department id is a foreign key 
-// need to break down id and name off of department to we can connect the ids from roles and department
+// enter the title, salary, and department for the role and that role is added to the database
+
 async function addRole() {
     try {
         // Query the department table
@@ -150,6 +151,42 @@ async function addRole() {
         console.error('Error:', err);
     }
 }
+//             {
+//                 type: 'input',
+//                 name: 'salary',
+//                 message: 'How much are they making?',
+//             },
+//             {
+//                 type: 'input',
+//                 message: 'Which department does this role belong in?',
+//                 name: 'departmentName',
+
+//             },
+//         ]).then(answers => {
+//             // Get the department ID based on the department name entered by the user
+//             pool.query('SELECT id FROM department WHERE department_name = $1', [answers.department], (error, results) => {
+//                 if (error) {
+//                     console.error('There was an error getting department ID:', error);
+//                     return;
+//                 }
+//                 // If department not found, display an error message
+//             if (results.rowCount === 0) {
+//                 console.error('Department not found.');
+//                 return;
+//             }
+//             // Get department ID from the results and insert the new role into the database
+//             const departmentId = answers.department[0].id;
+//             pool.query('INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)', [answers.title, answers.salary, departmentId], (error, result) => {
+//                 if (error) {
+//                     console.error('Error adding role:', error);
+//                     return;
+//                 } else if (result) { 
+//                 console.log('Role added successfully!');
+//                 questions();
+//             }});
+//         });
+//     });
+// };
 
 
 // working on employees
@@ -217,7 +254,7 @@ async function addEmployee() {
           
         ])
         const result = await pool.query(
-            `INSERT INTO employee (first_name, last_name, roles_id, manager_id) VALUES ($1, $2, $3, $4)`,
+            `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4) RETURNING *;`,
             [answers.firstNameEmp, answers.lastNameEmp, answers.empRole, answers.empManager]
         );
 
@@ -230,6 +267,7 @@ async function addEmployee() {
 
 }
 questions();
+
 
 
 
