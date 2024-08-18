@@ -12,7 +12,7 @@ CREATE TABLE department (
     department_name VARCHAR(30) UNIQUE NOT NULL
 );
 
-/*//TODO: Create a role table */
+/*//TODO: Create a roles table */
 CREATE TABLE roles (
 id SERIAL PRIMARY KEY,
 title VARCHAR(30) UNIQUE NOT NULL,

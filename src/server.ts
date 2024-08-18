@@ -15,6 +15,8 @@ function questions() {
         choices: ['view all departments',
             'view all roles',
             'view all employees',
+            'view employees by manager',
+            'view employees by department',
             'add a department',
             'add a role',
             'add an employee',
@@ -32,18 +34,24 @@ function questions() {
                 case 'view all employees':
                     viewAllEmployees();
                     break;
+                case 'view employees by manager':
+                    empByManager();
+                    break;
+                case 'view employees by department':
+                    empByDepartment();
+                    break;
                 case 'add a department':
                     addDepartment();
                     break;
-                case 'add a roll':
+                case 'add a role':
                     addRole();
                     break;
                 case 'add an employee':
                     addEmployee();
                     break;
-                // case 'update an employee roll':
-                //     updateEmployee();
-                //     break;
+                case 'update an employee role':
+                    updateEmployeeRole();
+                    break;
                 // case 'Quit':
                 //     quitApp();
                 //     break;
@@ -109,85 +117,46 @@ function viewAllRoles() {
 
 async function addRole() {
     try {
-        // Query the department table
-        const result = await pool.query('SELECT * FROM department');
-
-        // Map the departments to the format needed for choices
-        const deptArray = result.rows.map(department => ({
+        
+        const departmentResult = await pool.query(`SELECT id, department_name FROM department`);
+        const departmentArray = departmentResult.rows.map(department => ({
             name: department.department_name,
             value: department.id
         }));
 
-        console.log('Departments:', deptArray);
-
-        // create prompts for name, salary, and department(id)
         const answers = await inquirer.prompt([
             {
                 type: 'input',
-                name: 'newRoleName',
-                message: "please add a role",
+                name: 'title',
+                message: "please add job title",
             },
             {
                 type: 'input',
-                name: 'newRoleSalary',
-                message: "please add a salary(number)",
+                name: 'salary',
+                message: "please add new salary(number)",
             },
             {
                 type: 'list',
-                name: 'newDepartment',
-                message: "which department does the new role belong to?",
-                choices: deptArray
-            }
+                name: 'department',
+                message: "please add new department:",
+                choices: departmentArray
+            },
+          
+          
         ])
-        const insertResult = await pool.query(
-            `INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)`,
-            [answers.newRoleName, answers.newRoleSalary, answers.newDepartment]
+        const result = await pool.query(
+            `INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3) RETURNING *;`,
+            [answers.title, answers.salary, answers.department]
         );
 
-        console.table(insertResult.rows);
+        console.table(result.rows);
         questions();
 
     } catch (err) {
         console.error('Error:', err);
     }
-}
-//             {
-//                 type: 'input',
-//                 name: 'salary',
-//                 message: 'How much are they making?',
-//             },
-//             {
-//                 type: 'input',
-//                 message: 'Which department does this role belong in?',
-//                 name: 'departmentName',
 
-//             },
-//         ]).then(answers => {
-//             // Get the department ID based on the department name entered by the user
-//             pool.query('SELECT id FROM department WHERE department_name = $1', [answers.department], (error, results) => {
-//                 if (error) {
-//                     console.error('There was an error getting department ID:', error);
-//                     return;
-//                 }
-//                 // If department not found, display an error message
-//             if (results.rowCount === 0) {
-//                 console.error('Department not found.');
-//                 return;
-//             }
-//             // Get department ID from the results and insert the new role into the database
-//             const departmentId = answers.department[0].id;
-//             pool.query('INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)', [answers.title, answers.salary, departmentId], (error, result) => {
-//                 if (error) {
-//                     console.error('Error adding role:', error);
-//                     return;
-//                 } else if (result) { 
-//                 console.log('Role added successfully!');
-//                 questions();
-//             }});
-//         });
-//     });
-// };
-
+};
 
 // working on employees
 //  including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
@@ -266,6 +235,97 @@ async function addEmployee() {
     }
 
 }
+
+// update employee using updateEmployee()
+// I am prompted to select an employee to update and their new role and this information is updated in the database
+
+async function updateEmployeeRole() {
+    try {
+        // First fetch all employees so the user can choose which one needs to be updated
+        const employeeResult = await pool.query(`SELECT id, first_name, last_name FROM employee`);
+
+        // make it into an arry so it can be used in inquirer prompt
+        const employeeArray = employeeResult.rows.map(employee => ({
+            name: `${employee.first_name} ${employee.last_name}`,
+            value: employee.id
+        }));
+
+        // Fetch all roles (id needs to be included- foreign key!)
+        const rolesResult = await pool.query(`SELECT id, title FROM roles`);
+
+        const rolesArray = rolesResult.rows.map(roles => ({
+            name: roles.title,
+            value: roles.id
+        }));
+
+        // Prompt the user to select an employee and a new role
+        const answers = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'employeeId',
+                message: 'Select the employee you want to update:',
+                choices: employeeArray
+            },
+            {
+                type: 'list',
+                name: 'roleId',
+                message: 'Select the new role for the employee:',
+                choices: rolesArray
+            }
+        ]);
+
+        // Execute the UPDATE query to change the employee's role by connecting the foreign key (id) then return all (*) and call them
+        const result = await pool.query(
+            `UPDATE employee 
+             SET role_id = $1 
+             WHERE id = $2 
+             RETURNING *;`,
+            [answers.roleId, answers.employeeId]
+        );
+
+        console.table(result.rows);
+        questions();
+
+    } catch (err) {
+        console.error('Error:', err);
+    }
+
+}
+
+
+// BONUS: view employees by manager
+function empByManager() {
+    const sql = `SELECT CONCAT(employee.first_name, ' ', employee.last_name) AS Employee, COALESCE(CONCAT(manager.first_name, ' ', manager.last_name), 'No Manager') AS Manager FROM employee LEFT JOIN employee AS manager ON employee.manager_id = manager.id ORDER BY Manager, Employee;`
+    pool.query(sql, (err: Error, result: QueryResult) => {
+        if (err) {
+            console.log(err);
+        } else if (result) {
+            console.table(result.rows);
+            questions();
+        }
+    })
+};
+
+// BONUS: view employees by department
+function empByDepartment() {
+    const sql = `SELECT CONCAT(employee.first_name, ' ', employee.last_name) AS Employee, department.department_name AS Department FROM employee LEFT JOIN roles ON employee.role_id = roles.id LEFT JOIN department ON roles.department_id = department.id ORDER BY Department, Employee;`
+    pool.query(sql, (err: Error, result: QueryResult) => {
+        if (err) {
+            console.log(err);
+        } else if (result) {
+            console.table(result.rows);
+            questions();
+        }
+    })
+};
+
+
+
+
+// quit out of app using quitApp()
+
+
+
 questions();
 
 
