@@ -55,6 +55,7 @@ function questions() {
 
 // working with department first
 // see all departments in the table 
+// formatted table showing department names and department ids
 function viewAllDepartments() {
     pool.query(`SELECT * FROM department`, (err: Error, result: QueryResult) => {
         if (err) {
@@ -73,10 +74,11 @@ function addDepartment() {
     inquirer.prompt({
         type: 'input',
         name: 'newDeptName',
-        message: "please add a department",
+        message: "What is the name of the department you would like to add?",
     })
-        .then(function (answers) {
-            pool.query(`INSERT INTO department VALUES ('${answers.newDeptName}');`, (err: Error, result: QueryResult) => {
+        .then((answers) => {
+            const departmentName = answers.newDeptName;
+            pool.query(`INSERT INTO department (department_name) VALUES ($1) RETURNING *;`, [departmentName], (err: Error, result: QueryResult) => {
                 if (err) {
                     console.log(err);
                 } else if (result) {
@@ -88,9 +90,10 @@ function addDepartment() {
 };
 
 // working on roles
-// SELECT * ROLES from roles table
+// job title, role id, the department that role belongs to, and the salary for that role
 function viewAllRoles() {
-    pool.query(`SELECT * FROM roles`, (err: Error, result: QueryResult) => {
+    const sql = `SELECT roles.title AS job_title, roles.id AS role_id, roles.salary, department.department_name AS department_name FROM roles INNER JOIN department ON roles.department_id = department.id`
+    pool.query(sql, (err: Error, result: QueryResult) => {
         if (err) {
             console.log(err);
         } else if (result) {
@@ -150,9 +153,10 @@ async function addRole() {
 
 
 // working on employees
-// view all employees using SELECT * FROM employee table
+//  including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
 function viewAllEmployees() {
-    pool.query(`SELECT * FROM employee`, (err: Error, result: QueryResult) => {
+    const sql = `SELECT employee.id, employee.first_name, employee.last_name, roles.title AS job_title, department.department_name, roles.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN roles ON employee.role_id = roles.id LEFT JOIN department ON roles.department_id = department.id LEFT JOIN employee AS manager ON employee.manager_id = manager.id ORDER BY employee.id;`
+    pool.query(sql, (err: Error, result: QueryResult) => {
         if (err) {
             console.log(err);
         } else if (result) {

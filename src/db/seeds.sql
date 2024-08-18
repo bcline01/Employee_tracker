@@ -28,16 +28,16 @@ VALUES
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES 
-('Emma', 'Carter', 1, 001),
-('Liam', 'Sullivan', 1, 002),
+('Emma', 'Carter', 1, 3),
+('Liam', 'Sullivan', 1, 3),
 ('Jackson', 'Lee', 2, NULL),
 ('Ethan', 'Brown', 2, NULL),
-('Noah', 'Mitchell', 3, 005),
-('Olivia', 'Davis', 3, 006),
+('Noah', 'Mitchell', 3, 7),
+('Olivia', 'Davis', 3, 7),
 ('Mason', 'Clark', 4, NULL),
 ('James', 'Thompson', 4, NULL),
-('Lucas', 'Adams', 5, 009),
-('Mia', 'Walker', 5, 010);
+('Lucas', 'Adams', 5, 1),
+('Mia', 'Walker', 5, 1);
 
 RAISE NOTICE 'Transaction complete';
 
