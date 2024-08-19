@@ -52,9 +52,9 @@ function questions() {
                 case 'update an employee role':
                     updateEmployeeRole();
                     break;
-                // case 'Quit':
-                //     quitApp();
-                //     break;
+                case 'quit':
+                    quitApp();
+                    break;
                 default:
                     console.log('not a valid choice')
             }
@@ -323,6 +323,10 @@ function empByDepartment() {
 
 
 // quit out of app using quitApp()
+function quitApp() {
+    console.log('Goodbye!');
+    process.exit();  
+};
 
 
 
